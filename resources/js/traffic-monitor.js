@@ -180,7 +180,6 @@ const TrafficMonitor = (() => {
         if (window.Echo) {
             Echo.channel('router-updates')
                 .listen('RouterDataUpdated', (e) => {
-                    console.log('[TrafficMonitor] Event received', e.data?.traffic);
                     handleTraffic(e.data?.traffic);
                 });
         }

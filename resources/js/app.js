@@ -19,24 +19,8 @@ window.Echo = new Echo({
     enabledTransports: ['ws', 'wss'],
 });
 
-window.Echo.channel('router-updates')
-    .listen('RouterDataUpdated', (e) => {
-        console.log('[Reverb] RouterDataUpdated received', e);
-    });
-
 RouterStatus.init();
 TrafficMonitor.init();
 TopConnections.init();
 SystemUtilization.init();
 NetworkInfo.init();
-
-setTimeout(() => {
-    console.log('[Reverb] Triggering broadcast');
-    fetch('/router/broadcast', {
-        headers: {
-            'Accept': 'application/json',
-        },
-    }).then(() => {
-        console.log('[Reverb] Broadcast triggered');
-    });
-}, 1000);

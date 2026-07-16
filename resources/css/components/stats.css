@@ -80,11 +80,11 @@
     }
 
     .top-list-section {
-        @apply mb-3 last:mb-0;
+        @apply mb-3;
     }
 
     .top-list-item {
-        @apply flex items-center justify-between text-xs py-1 border-b border-gray-100 last:border-b-0;
+        @apply flex items-center justify-between text-xs py-1 border-b border-gray-100;
     }
 
     .top-list-ip {

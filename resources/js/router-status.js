@@ -26,7 +26,6 @@ const RouterStatus = (() => {
         if (window.Echo) {
             Echo.channel('router-updates')
                 .listen('RouterDataUpdated', (e) => {
-                    console.log('[RouterStatus] Event received', e.data?.status);
                     updateStatus(e.data?.status);
                 });
         }

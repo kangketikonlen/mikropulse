@@ -16,7 +16,7 @@
     }
 
     .network-info-item {
-        @apply text-xs border-b border-gray-100 last:border-b-0;
+        @apply text-xs border-b border-gray-100;
     }
 
     .network-info-item-odd {

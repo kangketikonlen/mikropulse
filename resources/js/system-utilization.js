@@ -71,7 +71,6 @@ const SystemUtilization = (() => {
         if (window.Echo) {
             Echo.channel('router-updates')
                 .listen('RouterDataUpdated', (e) => {
-                    console.log('[SystemUtilization] Event received', e.data?.systemUtilization);
                     handleSystemData(e);
                 });
         }

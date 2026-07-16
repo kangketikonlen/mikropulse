@@ -24,7 +24,6 @@ const TopConnections = (() => {
         if (window.Echo) {
             Echo.channel('router-updates')
                 .listen('RouterDataUpdated', (e) => {
-                    console.log('[TopConnections] Event received', e.data?.topConnections);
                     const topData = e.data?.topConnections ?? e.topConnections;
 
                     if (topData && topData.status === 'connected') {

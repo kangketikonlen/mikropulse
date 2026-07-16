@@ -33,7 +33,6 @@ const NetworkInfo = (() => {
         if (window.Echo) {
             Echo.channel('router-updates')
                 .listen('RouterDataUpdated', (e) => {
-                    console.log('[NetworkInfo] Event received', e.data?.networkInfo);
                     const networks = e.data?.networkInfo?.networks ?? e.networkInfo?.networks ?? [];
                     renderList(networks);
                 });
