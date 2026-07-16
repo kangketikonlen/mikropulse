@@ -7,9 +7,11 @@ Route::get('/', function () {
     return view('dashboard');
 });
 
-Route::get('/router/status', [RouterController::class, 'status'])->name('router.status');
-Route::get('/router/traffic', [RouterController::class, 'traffic'])->name('router.traffic');
-Route::get('/router/top-connections', [RouterController::class, 'topConnections'])->name('router.top-connections');
-Route::get('/router/system', [RouterController::class, 'systemUtilization'])->name('router.system');
-Route::get('/router/network', [RouterController::class, 'networkInfo'])->name('router.network');
-Route::get('/router/broadcast', [RouterController::class, 'broadcastUpdate'])->name('router.broadcast');
+Route::prefix('router')->name('router.')->group(function () {
+    Route::get('/status', [RouterController::class, 'status'])->name('status');
+    Route::get('/traffic', [RouterController::class, 'traffic'])->name('traffic');
+    Route::get('/top-connections', [RouterController::class, 'topConnections'])->name('top-connections');
+    Route::get('/system', [RouterController::class, 'systemUtilization'])->name('system');
+    Route::get('/network', [RouterController::class, 'networkInfo'])->name('network');
+    Route::get('/broadcast', [RouterController::class, 'broadcastUpdate'])->name('broadcast');
+});
