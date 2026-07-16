@@ -1,0 +1,61 @@
+@layer components {
+    .header {
+        @apply bg-white shadow-sm border-b border-gray-200;
+    }
+
+    .header-container {
+        @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    }
+
+    .header-inner {
+        @apply flex justify-between items-center h-16;
+    }
+
+    .header-brand {
+        @apply flex items-center gap-3;
+    }
+
+    .header-logo {
+        @apply w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center;
+    }
+
+    .header-title {
+        @apply text-xl font-bold text-gray-900;
+    }
+
+    .header-nav {
+        @apply flex items-center gap-4;
+    }
+
+    .header-link {
+        @apply text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors;
+    }
+
+    .header-btn-primary {
+        @apply inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors;
+    }
+
+    .router-status {
+        @apply flex items-center gap-2 text-sm;
+    }
+
+    .router-status-dot {
+        @apply w-2.5 h-2.5 rounded-full;
+    }
+
+    .router-status-dot-connected {
+        @apply bg-green-500;
+    }
+
+    .router-status-dot-disconnected {
+        @apply bg-red-500;
+    }
+
+    .router-status-dot-checking {
+        @apply bg-yellow-500 animate-pulse;
+    }
+
+    .router-status-label {
+        @apply text-gray-600;
+    }
+}

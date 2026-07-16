@@ -1,0 +1,93 @@
+@layer components {
+    .traffic-monitor {
+        @apply bg-white border-b border-gray-200;
+    }
+
+    .traffic-monitor-container {
+        @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3;
+    }
+
+    .traffic-monitor-header {
+        @apply flex items-center justify-between mb-3;
+    }
+
+    .traffic-monitor-title {
+        @apply text-lg font-bold text-gray-900;
+    }
+
+    .traffic-monitor-badge {
+        @apply inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium;
+    }
+
+    .traffic-monitor-badge-connected {
+        @apply bg-green-100 text-green-800;
+    }
+
+    .traffic-monitor-badge-disconnected {
+        @apply bg-red-100 text-red-800;
+    }
+
+    .traffic-monitor-badge-checking {
+        @apply bg-yellow-100 text-yellow-800;
+    }
+
+    .traffic-monitor-interface {
+        @apply text-[11px] text-gray-600;
+    }
+
+    .traffic-monitor-grid {
+        @apply grid grid-cols-1 lg:grid-cols-2 gap-2;
+    }
+
+    .traffic-monitor-card {
+        @apply bg-white rounded border border-gray-200 p-2;
+    }
+
+    .traffic-monitor-card-header {
+        @apply flex items-center justify-between mb-1;
+    }
+
+    .traffic-monitor-card-title {
+        @apply text-[11px] font-medium text-gray-600;
+    }
+
+    .traffic-monitor-card-value {
+        @apply text-lg font-bold text-gray-900;
+    }
+
+    .traffic-monitor-card-unit {
+        @apply text-[11px] text-gray-500 ml-1;
+    }
+
+    .traffic-monitor-canvas-wrap {
+        @apply h-16 overflow-hidden;
+    }
+
+    .traffic-monitor-canvas {
+        @apply w-full h-full;
+    }
+
+    .traffic-monitor-legend {
+        @apply flex items-center justify-center gap-3 mt-2;
+    }
+
+    .traffic-monitor-legend-item {
+        @apply flex items-center gap-1;
+    }
+
+    .traffic-monitor-legend-dot {
+        @apply w-2 h-2 rounded-full;
+    }
+
+    .traffic-monitor-legend-dot-rx {
+        @apply bg-indigo-600;
+    }
+
+    .traffic-monitor-legend-dot-tx {
+        @apply bg-green-600;
+    }
+
+    .traffic-monitor-legend-label {
+        @apply text-[11px] text-gray-600;
+    }
+}
