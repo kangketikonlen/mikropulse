@@ -43,6 +43,13 @@ class RouterController extends Controller
         return response()->json($data, 200);
     }
 
+    public function connectedClients(RouterService $service): JsonResponse
+    {
+        $data = $service->getConnectedClients();
+
+        return response()->json($data, 200);
+    }
+
     public function broadcastUpdate(RouterService $service): JsonResponse
     {
         try {

@@ -1,0 +1,45 @@
+@layer components {
+    .connected-clients {
+        @apply bg-white rounded-md border border-gray-200 p-2;
+    }
+
+    .connected-clients-header {
+        @apply flex items-center justify-between mb-2;
+    }
+
+    .connected-clients-title {
+        @apply text-[11px] font-semibold text-gray-700 uppercase tracking-wide;
+    }
+
+    .connected-clients-list {
+        @apply space-y-1.5 rounded-md overflow-y-auto max-h-32 sm:max-h-48 md:max-h-64;
+    }
+
+    .client-item {
+        @apply text-xs rounded-md border border-gray-100;
+    }
+
+    .client-item-odd {
+        @apply bg-green-50;
+    }
+
+    .client-item-even {
+        @apply bg-blue-50;
+    }
+
+    .client-row {
+        @apply flex items-center justify-between py-0.5 px-1.5;
+    }
+
+    .client-ip {
+        @apply font-mono text-gray-800 font-medium;
+    }
+
+    .client-hostname {
+        @apply text-gray-500 truncate ml-2;
+    }
+
+    .client-stat {
+        @apply text-[10px] text-gray-500;
+    }
+}

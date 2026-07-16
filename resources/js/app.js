@@ -6,6 +6,7 @@ import TrafficMonitor from './traffic-monitor.js';
 import TopConnections from './top-connections.js';
 import SystemUtilization from './system-utilization.js';
 import NetworkInfo from './network-info.js';
+import ConnectedClients from './connected-clients.js';
 
 window.Pusher = Pusher;
 
@@ -24,3 +25,4 @@ TrafficMonitor.init();
 TopConnections.init();
 SystemUtilization.init();
 NetworkInfo.init();
+ConnectedClients.init();

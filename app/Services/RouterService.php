@@ -22,6 +22,10 @@ class RouterService
     private static int $cachedNetworkDataTime = 0;
     private static int $networkDataTtl = 30;
 
+    private static ?array $cachedClientsData = null;
+    private static int $cachedClientsDataTime = 0;
+    private static int $clientsDataTtl = 5;
+
     private function getClient(): \Mivo\MikrotikRos6\Client
     {
         if (self::$client === null) {
@@ -120,6 +124,11 @@ class RouterService
                 self::$cachedNetworkDataTime = $now;
             }
 
+            if (self::$cachedClientsData === null || ($now - self::$cachedClientsDataTime) >= self::$clientsDataTtl) {
+                self::$cachedClientsData = $this->getConnectedClients($client);
+                self::$cachedClientsDataTime = $now;
+            }
+
             return [
                 'status' => [
                     'status' => 'connected',
@@ -127,9 +136,10 @@ class RouterService
                     'message' => 'Router is online',
                 ],
                 'traffic' => $trafficData,
-                'topConnections' => self::$cachedConnectionsData,
-                'systemUtilization' => self::$cachedSystemData,
-                'networkInfo' => self::$cachedNetworkData,
+                'topConnections' => $this->getTopConnections($client),
+                'systemUtilization' => $this->getSystemUtilization($client),
+                'networkInfo' => $this->getNetworkInfo($client),
+                'connectedClients' => self::$cachedClientsData,
             ];
         } catch (\Throwable $e) {
             \Log::error('RouterService error', ['message' => $e->getMessage()]);
@@ -385,6 +395,87 @@ class RouterService
         }
     }
 
+    public function getConnectedClients($client = null): array
+    {
+        try {
+            if ($client === null) {
+                $client = $this->getClient();
+                $connected = $client->isConnected();
+
+                if (! $connected) {
+                    return [
+                        'status' => 'disconnected',
+                        'message' => 'Router is not connected',
+                    ];
+                }
+            }
+
+            $connections = $client->comm('/ip/firewall/connection/print');
+            $leases = $client->comm('/ip/dhcp-server/lease/print');
+            $dnsEntries = $client->comm('/ip/dns/static/print');
+
+            $hostnameMap = [];
+            if (! empty($leases)) {
+                foreach ($leases as $lease) {
+                    $ip = $lease['address'] ?? null;
+                    $name = $lease['host-name'] ?? null;
+                    if ($ip && $name) {
+                        $hostnameMap[$ip] = $name;
+                    }
+                }
+            }
+            if (! empty($dnsEntries)) {
+                foreach ($dnsEntries as $entry) {
+                    $ip = $entry['address'] ?? null;
+                    $name = $entry['name'] ?? null;
+                    if ($ip && $name) {
+                        $hostnameMap[$ip] = $name;
+                    }
+                }
+            }
+
+            $ipStats = [];
+
+            if (! empty($connections)) {
+                foreach ($connections as $conn) {
+                    $src = $conn['src-address'] ?? null;
+                    if ($src) {
+                        $ip = explode(':', $src)[0];
+                        if (! isset($ipStats[$ip])) {
+                            $ipStats[$ip] = [
+                                'ip' => $ip,
+                                'hostname' => $hostnameMap[$ip] ?? null,
+                                'connections' => 0,
+                            ];
+                        }
+                        $ipStats[$ip]['connections']++;
+                    }
+                }
+            }
+
+            uasort($ipStats, fn($a, $b) => $b['connections'] <=> $a['connections']);
+
+            $clients = [];
+            foreach ($ipStats as $stat) {
+                $clients[] = [
+                    'ip' => $stat['ip'],
+                    'hostname' => $stat['hostname'] ?: 'Unknown',
+                    'connections' => $stat['connections'],
+                ];
+            }
+
+            return [
+                'status' => 'connected',
+                'clients' => $clients,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
     private function disconnectedResponse(): array
     {
         return [
@@ -405,6 +496,10 @@ class RouterService
                 'message' => 'Router is not connected',
             ],
             'networkInfo' => [
+                'status' => 'disconnected',
+                'message' => 'Router is not connected',
+            ],
+            'connectedClients' => [
                 'status' => 'disconnected',
                 'message' => 'Router is not connected',
             ],
@@ -431,6 +526,10 @@ class RouterService
                 'message' => $message,
             ],
             'networkInfo' => [
+                'status' => 'error',
+                'message' => $message,
+            ],
+            'connectedClients' => [
                 'status' => 'error',
                 'message' => $message,
             ],

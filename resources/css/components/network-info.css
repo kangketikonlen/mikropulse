@@ -12,11 +12,11 @@
     }
 
     .network-info-list {
-        @apply space-y-0 rounded-md overflow-hidden;
+        @apply space-y-1.5 rounded-md overflow-hidden;
     }
 
     .network-info-item {
-        @apply text-xs border-b border-gray-100;
+        @apply text-xs rounded-md border border-gray-100;
     }
 
     .network-info-item-odd {

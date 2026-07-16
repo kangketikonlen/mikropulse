@@ -13,5 +13,6 @@ Route::prefix('router')->name('router.')->group(function () {
     Route::get('/top-connections', [RouterController::class, 'topConnections'])->name('top-connections');
     Route::get('/system', [RouterController::class, 'systemUtilization'])->name('system');
     Route::get('/network', [RouterController::class, 'networkInfo'])->name('network');
+    Route::get('/clients', [RouterController::class, 'connectedClients'])->name('clients');
     Route::get('/broadcast', [RouterController::class, 'broadcastUpdate'])->name('broadcast');
 });
