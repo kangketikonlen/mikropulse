@@ -82,6 +82,11 @@
                                 </div>
                                 <div class="traffic-monitor-canvas-wrap">
                                     <canvas class="traffic-monitor-canvas" id="rx-chart"></canvas>
+                                    <div class="traffic-monitor-skeleton" id="rx-skeleton">
+                                        <div class="skeleton-bar"></div>
+                                        <div class="skeleton-bar"></div>
+                                        <div class="skeleton-bar"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="traffic-monitor-card">
@@ -94,6 +99,11 @@
                                 </div>
                                 <div class="traffic-monitor-canvas-wrap">
                                     <canvas class="traffic-monitor-canvas" id="tx-chart"></canvas>
+                                    <div class="traffic-monitor-skeleton" id="tx-skeleton">
+                                        <div class="skeleton-bar"></div>
+                                        <div class="skeleton-bar"></div>
+                                        <div class="skeleton-bar"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -156,8 +166,8 @@
                                     </div>
                                 </div>
                                 <div class="system-utilization-footer">
-                                    <span class="system-utilization-version" id="system-version">Checking...</span>
-                                    <span class="system-utilization-badge" id="system-version-badge">Checking...</span>
+                                    <span class="system-utilization-version" id="system-board-name">Loading...</span>
+                                    <span class="system-utilization-version" id="system-version">Loading...</span>
                                 </div>
                             </div>
                             <div class="network-info" id="network-info">

@@ -6,10 +6,26 @@ use Mivo\LaravelMikrotikRos6\Facades\MikrotikRos6;
 
 class RouterService
 {
-    public function getData(): array
+    private static ?\Mivo\MikrotikRos6\Client $client = null;
+    private static int $lastKeepalive = 0;
+    private static int $keepaliveInterval = 30;
+
+    private static ?array $cachedSystemData = null;
+    private static int $cachedSystemDataTime = 0;
+    private static int $systemDataTtl = 5;
+
+    private static ?array $cachedConnectionsData = null;
+    private static int $cachedConnectionsDataTime = 0;
+    private static int $connectionsDataTtl = 5;
+
+    private static ?array $cachedNetworkData = null;
+    private static int $cachedNetworkDataTime = 0;
+    private static int $networkDataTtl = 30;
+
+    private function getClient(): \Mivo\MikrotikRos6\Client
     {
-        try {
-            $client = MikrotikRos6::connection([
+        if (self::$client === null) {
+            self::$client = MikrotikRos6::connection([
                 'host' => config('mikrotik-ros6.connections.default.host'),
                 'username' => config('mikrotik-ros6.connections.default.username'),
                 'password' => config('mikrotik-ros6.connections.default.password'),
@@ -20,207 +36,273 @@ class RouterService
                 'delay' => config('mikrotik-ros6.connections.default.delay'),
                 'debug' => config('mikrotik-ros6.connections.default.debug'),
             ]);
+        }
+
+        if (! self::$client->isConnected()) {
+            self::$client->connect();
+        }
+
+        $now = time();
+        if ($now - self::$lastKeepalive >= self::$keepaliveInterval) {
+            self::$lastKeepalive = $now;
+            try {
+                self::$client->comm('/system/identity/print');
+            } catch (\Throwable $e) {
+                try {
+                    self::$client->connect();
+                } catch (\Throwable $e2) {
+                    self::$client = null;
+                    throw $e2;
+                }
+            }
+        }
+
+        return self::$client;
+    }
+
+    public static function disconnect(): void
+    {
+        if (self::$client !== null) {
+            try {
+                self::$client->disconnect();
+            } catch (\Throwable $e) {
+            }
+            self::$client = null;
+        }
+    }
+
+    public function getData(): array
+    {
+        try {
+            $client = $this->getClient();
             $connected = $client->isConnected();
 
-            // \Log::info('RouterService connection check', [
-            //     'connected' => $connected,
-            //     'host' => config('mikrotik-ros6.connections.default.host'),
-            //     'username' => config('mikrotik-ros6.connections.default.username'),
-            //     'port' => config('mikrotik-ros6.connections.default.port'),
-            //     'ssl' => config('mikrotik-ros6.connections.default.ssl'),
-            // ]);
-
             if (! $connected) {
-                return [
-                    'status' => [
-                        'status' => 'disconnected',
-                        'message' => 'Router is not connected',
-                    ],
-                    'traffic' => [
-                        'status' => 'disconnected',
-                        'message' => 'Router is not connected',
-                    ],
-                    'topConnections' => [
-                        'status' => 'disconnected',
-                        'message' => 'Router is not connected',
-                    ],
-                    'systemUtilization' => [
-                        'status' => 'disconnected',
-                        'message' => 'Router is not connected',
-                    ],
-                    'networkInfo' => [
-                        'status' => 'disconnected',
-                        'message' => 'Router is not connected',
-                    ],
+                return $this->disconnectedResponse();
+            }
+
+            $identity = $client->comm('/system/identity/print');
+            $identityName = $identity[0]['name'] ?? 'Unknown';
+
+            $traffic = $client->comm('/interface/monitor-traffic', [
+                'interface' => 'ether1',
+                'once' => '',
+            ]);
+            $trafficData = [];
+            if (! empty($traffic)) {
+                $td = $traffic[0];
+                $trafficData = [
+                    'status' => 'connected',
+                    'rx' => isset($td['rx-bits-per-second']) ? (int) $td['rx-bits-per-second'] : 0,
+                    'tx' => isset($td['tx-bits-per-second']) ? (int) $td['tx-bits-per-second'] : 0,
+                ];
+            } else {
+                $trafficData = [
+                    'status' => 'error',
+                    'message' => 'No traffic data available for ether1',
                 ];
             }
 
-        $identity = $client->comm('/system/identity/print');
-        $identityName = $identity[0]['name'] ?? 'Unknown';
+            $now = time();
 
-        $traffic = $client->comm('/interface/monitor-traffic', [
-            'interface' => 'ether1',
-            'once' => '',
-        ]);
-        $trafficData = [];
-        if (! empty($traffic)) {
-            $td = $traffic[0];
-            $trafficData = [
-                'status' => 'connected',
-                'rx' => isset($td['rx-bits-per-second']) ? (int) $td['rx-bits-per-second'] : 0,
-                'tx' => isset($td['tx-bits-per-second']) ? (int) $td['tx-bits-per-second'] : 0,
-            ];
-        } else {
-            $trafficData = [
-                'status' => 'error',
-                'message' => 'No traffic data available for ether1',
-            ];
-        }
-
-        $connections = $client->comm('/ip/firewall/connection/print');
-        $topConnectionsData = ['status' => 'connected', 'sources' => [], 'destinations' => []];
-        if (! empty($connections)) {
-            $sourceCounts = [];
-            $destinationCounts = [];
-
-            foreach ($connections as $conn) {
-                $src = $conn['src-address'] ?? null;
-                $dst = $conn['dst-address'] ?? null;
-
-                if ($src) {
-                    $sourceCounts[$src] = ($sourceCounts[$src] ?? 0) + 1;
-                }
-                if ($dst) {
-                    $destinationCounts[$dst] = ($destinationCounts[$dst] ?? 0) + 1;
-                }
+            if (self::$cachedSystemData === null || ($now - self::$cachedSystemDataTime) >= self::$systemDataTtl) {
+                self::$cachedSystemData = $this->fetchSystemData($client);
+                self::$cachedSystemDataTime = $now;
             }
 
-            arsort($sourceCounts);
-            arsort($destinationCounts);
+            if (self::$cachedConnectionsData === null || ($now - self::$cachedConnectionsDataTime) >= self::$connectionsDataTtl) {
+                self::$cachedConnectionsData = $this->fetchConnectionsData($client);
+                self::$cachedConnectionsDataTime = $now;
+            }
 
-            $topSources = array_slice($sourceCounts, 0, 3, true);
-            $topDestinations = array_slice($destinationCounts, 0, 3, true);
+            if (self::$cachedNetworkData === null || ($now - self::$cachedNetworkDataTime) >= self::$networkDataTtl) {
+                self::$cachedNetworkData = $this->fetchNetworkData($client);
+                self::$cachedNetworkDataTime = $now;
+            }
 
-            $topConnectionsData = [
-                'status' => 'connected',
-                'sources' => array_keys($topSources),
-                'source_counts' => $topSources,
-                'destinations' => array_keys($topDestinations),
-                'destination_counts' => $topDestinations,
+            return [
+                'status' => [
+                    'status' => 'connected',
+                    'identity' => $identityName,
+                    'message' => 'Router is online',
+                ],
+                'traffic' => $trafficData,
+                'topConnections' => self::$cachedConnectionsData,
+                'systemUtilization' => self::$cachedSystemData,
+                'networkInfo' => self::$cachedNetworkData,
             ];
-        }
+        } catch (\Throwable $e) {
+            \Log::error('RouterService error', ['message' => $e->getMessage()]);
 
+            return $this->errorResponse($e->getMessage());
+        }
+    }
+
+    private function fetchSystemData($client): array
+    {
         $resources = $client->comm('/system/resource/print');
-        $systemData = ['status' => 'error', 'message' => 'No system resource data available'];
-        if (! empty($resources)) {
-            $data = $resources[0];
-
-            $cpuLoad = (int) ($data['cpu-load'] ?? 0);
-            $totalMemory = (int) ($data['total-memory'] ?? 1);
-            $freeMemory = (int) ($data['free-memory'] ?? 0);
-            $memoryUsed = $totalMemory - $freeMemory;
-            $memoryPercent = $totalMemory > 0 ? round(($memoryUsed / $totalMemory) * 100) : 0;
-
-            $totalStorage = (int) ($data['total-hdd-space'] ?? 1);
-            $freeStorage = (int) ($data['free-hdd-space'] ?? 0);
-            $storageUsed = $totalStorage - $freeStorage;
-            $storagePercent = $totalStorage > 0 ? round(($storageUsed / $totalStorage) * 100) : 0;
-
-            $uptime = $data['uptime'] ?? '0s';
-            $version = $data['version'] ?? 'Unknown';
-
-            $latestVersion = $this->getLatestRouterOSVersion();
-            $isLatest = $this->isLatestVersion($version, $latestVersion);
-
-            $systemData = [
-                'status' => 'connected',
-                'cpu' => $cpuLoad,
-                'memory' => $memoryPercent,
-                'storage' => $storagePercent,
-                'uptime' => $this->formatUptime($uptime),
-                'version' => $version,
-                'is_latest' => $isLatest,
-                'latest_version' => $latestVersion,
-            ];
+        if (empty($resources)) {
+            return ['status' => 'error', 'message' => 'No system resource data available'];
         }
 
+        $data = $resources[0];
+
+        $cpuLoad = (int) ($data['cpu-load'] ?? 0);
+        $totalMemory = (int) ($data['total-memory'] ?? 1);
+        $freeMemory = (int) ($data['free-memory'] ?? 0);
+        $memoryUsed = $totalMemory - $freeMemory;
+        $memoryPercent = $totalMemory > 0 ? round(($memoryUsed / $totalMemory) * 100) : 0;
+
+        $totalStorage = (int) ($data['total-hdd-space'] ?? 1);
+        $freeStorage = (int) ($data['free-hdd-space'] ?? 0);
+        $storageUsed = $totalStorage - $freeStorage;
+        $storagePercent = $totalStorage > 0 ? round(($storageUsed / $totalStorage) * 100) : 0;
+
+        $uptime = $data['uptime'] ?? '0s';
+        $boardName = $data['board-name'] ?? 'Unknown';
+        $version = $data['version'] ?? 'Unknown';
+
+        return [
+            'status' => 'connected',
+            'cpu' => $cpuLoad,
+            'memory' => $memoryPercent,
+            'storage' => $storagePercent,
+            'uptime' => $this->formatUptime($uptime),
+            'board_name' => $boardName,
+            'version' => $version,
+        ];
+    }
+
+    private function fetchConnectionsData($client): array
+    {
+        $connections = $client->comm('/ip/firewall/connection/print');
+        if (empty($connections)) {
+            return ['status' => 'connected', 'sources' => [], 'destinations' => []];
+        }
+
+        $sourceCounts = [];
+        $destinationCounts = [];
+
+        foreach ($connections as $conn) {
+            $src = $conn['src-address'] ?? null;
+            $dst = $conn['dst-address'] ?? null;
+
+            if ($src) {
+                $sourceCounts[$src] = ($sourceCounts[$src] ?? 0) + 1;
+            }
+            if ($dst) {
+                $destinationCounts[$dst] = ($destinationCounts[$dst] ?? 0) + 1;
+            }
+        }
+
+        arsort($sourceCounts);
+        arsort($destinationCounts);
+
+        $topSources = array_slice($sourceCounts, 0, 3, true);
+        $topDestinations = array_slice($destinationCounts, 0, 3, true);
+
+        return [
+            'status' => 'connected',
+            'sources' => array_keys($topSources),
+            'source_counts' => $topSources,
+            'destinations' => array_keys($topDestinations),
+            'destination_counts' => $topDestinations,
+        ];
+    }
+
+    private function fetchNetworkData($client): array
+    {
         $networks = $client->comm('/ip/dhcp-server/network/print');
         $leases = $client->comm('/ip/dhcp-server/lease/print');
-        $networkData = ['status' => 'connected', 'networks' => []];
-        if (! empty($networks)) {
-            $networksList = [];
 
-            foreach ($networks as $network) {
-                $networkAddress = $network['network'] ?? $network['address'] ?? '--';
-                $gateway = $network['gateway'] ?? '--';
-                $dns = $network['dns-server'] ?? '--';
+        if (empty($networks)) {
+            return ['status' => 'connected', 'networks' => []];
+        }
 
-                $leaseCount = 0;
-                if (! empty($leases)) {
-                    $parts = explode('.', $networkAddress);
-                    $networkPrefix = count($parts) >= 3 ? $parts[0].'.'.$parts[1].'.'.$parts[2].'.' : '';
-                    foreach ($leases as $lease) {
-                        $leaseIp = $lease['address'] ?? '';
-                        if ($networkPrefix && str_starts_with($leaseIp, $networkPrefix)) {
-                            $leaseCount++;
-                        }
+        $networksList = [];
+
+        foreach ($networks as $network) {
+            $networkAddress = $network['network'] ?? $network['address'] ?? '--';
+            $gateway = $network['gateway'] ?? '--';
+            $dns = $network['dns-server'] ?? '--';
+
+            $leaseCount = 0;
+            if (! empty($leases)) {
+                $parts = explode('.', $networkAddress);
+                $networkPrefix = count($parts) >= 3 ? $parts[0].'.'.$parts[1].'.'.$parts[2].'.' : '';
+                foreach ($leases as $lease) {
+                    $leaseIp = $lease['address'] ?? '';
+                    if ($networkPrefix && str_starts_with($leaseIp, $networkPrefix)) {
+                        $leaseCount++;
                     }
                 }
-
-                $networksList[] = [
-                    'address' => $networkAddress,
-                    'gateway' => $gateway,
-                    'dns' => $dns,
-                    'leases' => $leaseCount,
-                ];
             }
 
-            $networkData = [
-                'status' => 'connected',
-                'networks' => $networksList,
+            $networksList[] = [
+                'address' => $networkAddress,
+                'gateway' => $gateway,
+                'dns' => $dns,
+                'leases' => $leaseCount,
             ];
         }
 
-        $client->disconnect();
-
         return [
-            'status' => [
-                'status' => 'connected',
-                'identity' => $identityName,
-                'message' => 'Router is online',
-            ],
-            'traffic' => $trafficData,
-            'topConnections' => $topConnectionsData,
-            'systemUtilization' => $systemData,
-            'networkInfo' => $networkData,
+            'status' => 'connected',
+            'networks' => $networksList,
         ];
-    } catch (\Throwable $e) {
-        \Log::error('RouterService error', ['message' => $e->getMessage()]);
+    }
 
+    private function disconnectedResponse(): array
+    {
         return [
             'status' => [
-                'status' => 'error',
-                'message' => $e->getMessage(),
+                'status' => 'disconnected',
+                'message' => 'Router is not connected',
             ],
             'traffic' => [
-                'status' => 'error',
-                'message' => $e->getMessage(),
+                'status' => 'disconnected',
+                'message' => 'Router is not connected',
             ],
             'topConnections' => [
-                'status' => 'error',
-                'message' => $e->getMessage(),
+                'status' => 'disconnected',
+                'message' => 'Router is not connected',
             ],
             'systemUtilization' => [
-                'status' => 'error',
-                'message' => $e->getMessage(),
+                'status' => 'disconnected',
+                'message' => 'Router is not connected',
             ],
             'networkInfo' => [
-                'status' => 'error',
-                'message' => $e->getMessage(),
+                'status' => 'disconnected',
+                'message' => 'Router is not connected',
             ],
         ];
     }
-}
+
+    private function errorResponse(string $message): array
+    {
+        return [
+            'status' => [
+                'status' => 'error',
+                'message' => $message,
+            ],
+            'traffic' => [
+                'status' => 'error',
+                'message' => $message,
+            ],
+            'topConnections' => [
+                'status' => 'error',
+                'message' => $message,
+            ],
+            'systemUtilization' => [
+                'status' => 'error',
+                'message' => $message,
+            ],
+            'networkInfo' => [
+                'status' => 'error',
+                'message' => $message,
+            ],
+        ];
+    }
 
     private function formatUptime(string $uptime): string
     {
@@ -248,60 +330,5 @@ class RouterService
         }
 
         return implode(' ', $parts) ?: '0M';
-    }
-
-    private function getLatestRouterOSVersion(): string
-    {
-        $cached = cache()->get('latest_routeros_version');
-        if ($cached) {
-            return $cached;
-        }
-
-        try {
-            $context = stream_context_create([
-                'http' => [
-                    'timeout' => 5,
-                    'user_agent' => 'MikroPulse/1.0',
-                ],
-            ]);
-
-            $html = @file_get_contents('https://mikrotik.com/download', false, $context);
-            if ($html && preg_match('/routeros\s*v?(\d+\.\d+(?:\.\d+)?)/i', $html, $matches)) {
-                $version = $matches[1];
-                cache()->put('latest_routeros_version', $version, 3600);
-
-                return $version;
-            }
-        } catch (\Exception $e) {
-            // Ignore
-        }
-
-        return '7.18';
-    }
-
-    private function isLatestVersion(string $current, string $latest): bool
-    {
-        if ($latest === 'Unknown' || $current === 'Unknown') {
-            return false;
-        }
-
-        $currentParts = explode('.', $current);
-        $latestParts = explode('.', $latest);
-
-        $max = max(count($currentParts), count($latestParts));
-
-        for ($i = 0; $i < $max; $i++) {
-            $currentPart = (int) ($currentParts[$i] ?? 0);
-            $latestPart = (int) ($latestParts[$i] ?? 0);
-
-            if ($currentPart < $latestPart) {
-                return false;
-            }
-            if ($currentPart > $latestPart) {
-                return true;
-            }
-        }
-
-        return true;
     }
 }

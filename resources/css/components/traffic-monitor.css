@@ -52,7 +52,19 @@
     }
 
     .traffic-monitor-card-value {
-        @apply text-lg font-bold text-gray-900;
+        @apply text-lg font-bold transition-colors duration-300;
+    }
+
+    .traffic-monitor-card-value.speed-low {
+        @apply text-green-600;
+    }
+
+    .traffic-monitor-card-value.speed-medium {
+        @apply text-yellow-600;
+    }
+
+    .traffic-monitor-card-value.speed-high {
+        @apply text-red-600;
     }
 
     .traffic-monitor-card-unit {
@@ -60,12 +72,60 @@
     }
 
     .traffic-monitor-canvas-wrap {
-        @apply h-16 overflow-hidden;
+        @apply h-16 overflow-hidden relative transition-opacity duration-300;
     }
 
     .traffic-monitor-canvas {
         @apply w-full h-full;
     }
+
+    .traffic-monitor-canvas-wrap::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(79, 70, 229, 0.04) 25%,
+            rgba(79, 70, 229, 0.08) 50%,
+            rgba(79, 70, 229, 0.04) 75%,
+            transparent 100%
+        );
+        background-size: 200% 100%;
+        animation: traffic-monitor-sweep 4s linear infinite;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .traffic-monitor-canvas-wrap canvas {
+        position: relative;
+        z-index: 1;
+    }
+
+    @keyframes traffic-monitor-sweep {
+        0% { background-position: 100% 0; }
+        100% { background-position: -100% 0; }
+    }
+
+    .traffic-monitor-skeleton {
+        @apply absolute inset-0 flex items-end gap-1 pb-1 px-1 bg-white/80 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-none;
+    }
+
+    .traffic-monitor-loading .traffic-monitor-skeleton {
+        @apply opacity-100 pointer-events-auto;
+    }
+
+    .traffic-monitor-loading .traffic-monitor-canvas {
+        @apply opacity-30;
+    }
+
+    .skeleton-bar {
+        @apply flex-1 bg-gray-200 rounded-sm animate-pulse;
+    }
+
+    .skeleton-bar:nth-child(1) { @apply h-3/5; animation-delay: 0ms; }
+    .skeleton-bar:nth-child(2) { @apply h-4/5; animation-delay: 150ms; }
+    .skeleton-bar:nth-child(3) { @apply h-2/5; animation-delay: 300ms; }
 
     .traffic-monitor-legend {
         @apply flex items-center justify-center gap-3 mt-2;

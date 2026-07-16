@@ -50,26 +50,17 @@ const SystemUtilization = (() => {
 
     function init() {
         const uptimeEl = document.getElementById('system-uptime');
+        const boardNameEl = document.getElementById('system-board-name');
         const versionEl = document.getElementById('system-version');
-        const badgeEl = document.getElementById('system-version-badge');
 
-        if (!uptimeEl || !versionEl || !badgeEl) return;
+        if (!uptimeEl || !boardNameEl || !versionEl) return;
 
         function handleSystemData(data) {
             const system = data?.systemUtilization ?? data?.data?.systemUtilization ?? data;
             if (system?.status === 'connected') {
                 uptimeEl.textContent = system.uptime || '0M';
-                versionEl.textContent = 'RouterOS ' + (system.version || 'Unknown');
-
-                badgeEl.classList.remove('system-utilization-badge-latest', 'system-utilization-badge-outdated');
-
-                if (system.is_latest) {
-                    badgeEl.classList.add('system-utilization-badge-latest');
-                    badgeEl.textContent = 'Latest';
-                } else {
-                    badgeEl.classList.add('system-utilization-badge-outdated');
-                    badgeEl.textContent = 'Update available';
-                }
+                boardNameEl.textContent = system.board_name || 'Unknown Router';
+                versionEl.textContent = 'v' + (system.version || 'Unknown');
 
                 drawGauge('cpu-gauge', system.cpu || 0, 100, '#4f46e5');
                 drawGauge('ram-gauge', system.memory || 0, 100, '#16a34a');

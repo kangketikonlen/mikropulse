@@ -180,10 +180,8 @@ class RouterController extends Controller
             $storagePercent = $totalStorage > 0 ? round(($storageUsed / $totalStorage) * 100) : 0;
 
             $uptime = $data['uptime'] ?? '0s';
+            $boardName = $data['board-name'] ?? 'Unknown';
             $version = $data['version'] ?? 'Unknown';
-
-            $latestVersion = $this->getLatestRouterOSVersion();
-            $isLatest = $this->isLatestVersion($version, $latestVersion);
 
             return response()->json([
                 'status' => 'connected',
@@ -191,9 +189,8 @@ class RouterController extends Controller
                 'memory' => $memoryPercent,
                 'storage' => $storagePercent,
                 'uptime' => $this->formatUptime($uptime),
+                'board_name' => $boardName,
                 'version' => $version,
-                'is_latest' => $isLatest,
-                'latest_version' => $latestVersion,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -317,60 +314,5 @@ class RouterController extends Controller
         }
 
         return implode(' ', $parts) ?: '0M';
-    }
-
-    private function getLatestRouterOSVersion(): string
-    {
-        $cached = cache()->get('latest_routeros_version');
-        if ($cached) {
-            return $cached;
-        }
-
-        try {
-            $context = stream_context_create([
-                'http' => [
-                    'timeout' => 5,
-                    'user_agent' => 'MikroPulse/1.0',
-                ],
-            ]);
-
-            $html = @file_get_contents('https://mikrotik.com/download', false, $context);
-            if ($html && preg_match('/routeros\s*v?(\d+\.\d+(?:\.\d+)?)/i', $html, $matches)) {
-                $version = $matches[1];
-                cache()->put('latest_routeros_version', $version, 3600);
-
-                return $version;
-            }
-        } catch (\Exception $e) {
-            // Ignore
-        }
-
-        return '7.18';
-    }
-
-    private function isLatestVersion(string $current, string $latest): bool
-    {
-        if ($latest === 'Unknown' || $current === 'Unknown') {
-            return false;
-        }
-
-        $currentParts = explode('.', $current);
-        $latestParts = explode('.', $latest);
-
-        $max = max(count($currentParts), count($latestParts));
-
-        for ($i = 0; $i < $max; $i++) {
-            $currentPart = (int) ($currentParts[$i] ?? 0);
-            $latestPart = (int) ($latestParts[$i] ?? 0);
-
-            if ($currentPart < $latestPart) {
-                return false;
-            }
-            if ($currentPart > $latestPart) {
-                return true;
-            }
-        }
-
-        return true;
     }
 }

@@ -15,6 +15,10 @@ class BroadcastRouterUpdates extends Command
     {
         $this->info('Starting continuous broadcast...');
 
+        pcntl_async_signals(true);
+        pcntl_signal(SIGINT, fn () => RouterService::disconnect());
+        pcntl_signal(SIGTERM, fn () => RouterService::disconnect());
+
         while (true) {
             try {
                 $data = $service->getData();
@@ -26,7 +30,7 @@ class BroadcastRouterUpdates extends Command
                 $this->error('['.now()->format('H:i:s').'] '.$e->getMessage());
             }
 
-            usleep(100000); // Sleep for 200 milliseconds
+            usleep(1000000); // Sleep for 1 second before the next broadcast
         }
     }
 }
