@@ -21,6 +21,12 @@ All notable changes to this project will be documented in this file.
 - Theme toggle functionality
 - Shared utility CSS classes and JS helpers for consistent styling and logic
 - Skeleton loading states and CSS-based sweep animations
+- CHANGELOGS.md to track project evolution
+- Comprehensive README.md with project-specific details, features, and tech stack
+- Feature tests for RouterController (21 tests covering all endpoints)
+- Unit tests for RouterService (20 tests covering private helpers)
+- Proper TestCase base class with `createApplication()` for Laravel bootstrapping
+- RefreshDatabase trait integration for feature tests
 
 ### Changed
 - Refactored RouterController to delegate logic to RouterService (thin controller pattern)
@@ -40,6 +46,12 @@ All notable changes to this project will be documented in this file.
 - Simplified CSS by removing unnecessary pseudo-classes
 - Stripped debug console.log statements from all monitoring modules
 - Updated canvas-based charts and gauges to dynamically adapt colors based on theme
+- Replaced boilerplate ExampleTest.php with specific RouterController and RouterService test suites
+- Updated Pest.php configuration to use RefreshDatabase trait and correct TestCase extension
+
+### Removed
+- Playwright MCP temporary snapshots and metadata files
+- ExampleTest.php boilerplate tests from Feature and Unit directories
 
 ### Performance
 - Added signal handling in BroadcastRouterUpdates for graceful shutdowns
