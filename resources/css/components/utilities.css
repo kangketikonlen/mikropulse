@@ -1,6 +1,6 @@
 @layer components {
     .card {
-        @apply bg-white rounded-lg border border-gray-200 p-2 dark:bg-dark-surface dark:border-dark-border;
+        @apply bg-white rounded-lg border border-gray-200 dark:bg-dark-surface dark:border-dark-border;
     }
 
     .card-header {
@@ -9,10 +9,6 @@
 
     .card-title {
         @apply text-[11px] font-semibold text-gray-700 uppercase tracking-wide dark:text-gray-300;
-    }
-
-    .card-title-lg {
-        @apply text-lg font-bold text-gray-900 dark:text-gray-100;
     }
 
     .list-item {

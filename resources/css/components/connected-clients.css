@@ -1,14 +1,14 @@
 @layer components {
     .connected-clients {
-        @apply card p-2;
+        @apply bg-white rounded-lg border border-gray-200 p-2 dark:bg-dark-surface dark:border-dark-border;
     }
 
     .connected-clients-header {
-        @apply card-header;
+        @apply flex items-center justify-between mb-2;
     }
 
     .connected-clients-title {
-        @apply card-title;
+        @apply text-[11px] font-semibold text-gray-700 uppercase tracking-wide dark:text-gray-300;
     }
 
     .connected-clients-list {
@@ -16,30 +16,30 @@
     }
 
     .client-item {
-        @apply list-item;
+        @apply text-xs rounded-md border border-gray-100 dark:border-dark-border;
     }
 
     .client-item-odd {
-        @apply list-item-odd;
+        @apply bg-gray-50 dark:bg-transparent;
     }
 
     .client-item-even {
-        @apply list-item-even;
+        @apply bg-white dark:bg-white/5;
     }
 
     .client-row {
-        @apply list-row;
+        @apply flex items-center justify-between py-0.5 px-1.5;
     }
 
     .client-ip {
-        @apply list-value;
+        @apply font-mono text-gray-800 font-medium dark:text-gray-200;
     }
 
     .client-hostname {
-        @apply list-label truncate ml-2;
+        @apply text-gray-500 truncate ml-2 dark:text-gray-400;
     }
 
     .client-stat {
-        @apply list-stat;
+        @apply text-[10px] text-gray-500 dark:text-gray-400;
     }
 }

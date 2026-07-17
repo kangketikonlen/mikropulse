@@ -8,15 +8,15 @@
     }
 
     .top-list {
-        @apply card p-3;
+        @apply bg-white rounded-lg border border-gray-200 p-3 dark:bg-dark-surface dark:border-dark-border;
     }
 
     .top-list-header {
-        @apply card-header;
+        @apply flex items-center gap-2 mb-2;
     }
 
     .top-list-title {
-        @apply card-title;
+        @apply text-[11px] font-semibold text-gray-700 uppercase tracking-wide dark:text-gray-300;
     }
 
     .top-list-items {
@@ -36,10 +36,10 @@
     }
 
     .top-list-ip {
-        @apply list-value;
+        @apply font-mono text-gray-800 dark:text-gray-200;
     }
 
     .top-list-count {
-        @apply list-stat;
+        @apply text-gray-500 font-medium dark:text-gray-400;
     }
 }

@@ -1,6 +1,6 @@
 @layer components {
     .network-info {
-        @apply card p-2;
+        @apply bg-white rounded-lg border border-gray-200 p-2 dark:bg-dark-surface dark:border-dark-border;
     }
 
     .network-info-header {
@@ -8,7 +8,7 @@
     }
 
     .network-info-title {
-        @apply card-title;
+        @apply text-[11px] font-semibold text-gray-700 uppercase tracking-wide dark:text-gray-300;
     }
 
     .network-info-list {
@@ -16,30 +16,30 @@
     }
 
     .network-info-item {
-        @apply list-item;
+        @apply text-xs rounded-md border border-gray-100 dark:border-dark-border;
     }
 
     .network-info-item-odd {
-        @apply list-item-odd;
+        @apply bg-gray-50 dark:bg-transparent;
     }
 
     .network-info-item-even {
-        @apply list-item-even;
+        @apply bg-white dark:bg-white/5;
     }
 
     .network-info-row {
-        @apply list-row;
+        @apply flex items-center gap-1.5 py-0.5 px-1.5;
     }
 
     .network-info-label {
-        @apply list-label;
+        @apply text-gray-500 dark:text-gray-400;
     }
 
     .network-info-value {
-        @apply list-value;
+        @apply font-mono text-gray-800 font-medium dark:text-gray-200;
     }
 
     .network-info-badge {
-        @apply badge;
+        @apply inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-indigo-100 text-indigo-800 ml-auto dark:bg-indigo-900/50 dark:text-indigo-300;
     }
 }
