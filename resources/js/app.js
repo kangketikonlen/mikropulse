@@ -1,13 +1,13 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
-import RouterStatus from './router-status.js';
-import TrafficMonitor from './traffic-monitor.js';
-import TopConnections from './top-connections.js';
-import SystemUtilization from './system-utilization.js';
-import NetworkInfo from './network-info.js';
-import ConnectedClients from './connected-clients.js';
-import QueueMonitor from './queue-monitor.js';
+import RouterStatus from './components/router-status.js';
+import TrafficMonitor from './components/traffic-monitor.js';
+import TopConnections from './components/top-connections.js';
+import SystemUtilization from './components/system-utilization.js';
+import NetworkInfo from './components/network-info.js';
+import ConnectedClients from './components/connected-clients.js';
+import QueueMonitor from './components/queue-monitor.js';
 
 window.Pusher = Pusher;
 
