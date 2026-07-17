@@ -1,58 +1,138 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+    <img src="https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel">
+    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
+    <img src="https://img.shields.io/badge/Laravel_Reverb-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel Reverb">
+    <img src="https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white" alt="Chart.js">
 </p>
 
-## About Laravel
+<h1 align="center">MikroPulse</h1>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+    <b>Realtime MikroTik Router Monitoring Dashboard</b>
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+<p align="center">
+    A modern, real-time monitoring dashboard for MikroTik routers built with Laravel, Tailwind CSS, and Laravel Reverb for live WebSocket updates.
+</p>
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Features
 
-## Learning Laravel
+- **Realtime Traffic Monitor** - Live RX/TX bandwidth visualization with Chart.js
+- **System Utilization** - CPU, RAM, and Storage gauges with canvas rendering
+- **Network Information** - LAN, Gateway, DNS, and DHCP lease tracking
+- **Connected Clients** - Active client monitoring with bandwidth usage (DL/UL)
+- **Queue Monitoring** - Simple Queue tree status and traffic rates
+- **Top Connections** - Top source and destination IP tracking
+- **Dark Mode** - Full dark/light theme support with smooth transitions
+- **Reactive Updates** - Real-time data via Laravel Reverb WebSockets
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Tech Stack
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Backend**: Laravel 13
+- **Frontend**: Tailwind CSS 4, Vanilla JavaScript (ES Modules)
+- **Real-time**: Laravel Reverb (WebSockets)
+- **Charts**: Chart.js
+- **Icons**: Font Awesome
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Prerequisites
 
-## Agentic Development
+- PHP 8.2+
+- Composer
+- Node.js & npm/pnpm
+- MikroTik RouterOS with RouterOS API access
+- Redis (for queue/reverb)
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Installation
 
 ```bash
-composer require laravel/boost --dev
+# Clone repository
+git clone https://github.com/yourusername/mikropulse.git
+cd mikropulse
 
-php artisan boost:install
+# Install PHP dependencies
+composer install
+
+# Install JS dependencies
+npm install
+
+# Environment setup
+cp .env.example .env
+php artisan key:generate
+
+# Configure Reverb in .env
+REVERB_APP_ID=your-app-id
+REVERB_APP_KEY=your-app-key
+REVERB_APP_SECRET=your-app-secret
+REVERB_SERVER_HOST=127.0.0.1
+REVERB_SERVER_PORT=8088
+
+# Run migrations
+php artisan migrate
+
+# Build assets
+npm run build
+
+# Start Reverb server
+php artisan reverb:start
+
+# Serve application
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Router Configuration
 
-## Contributing
+The dashboard connects to MikroTik routers via the RouterOS API. Configure your router credentials in the `.env` file:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```env
+ROUTER_HOST=192.168.88.1
+ROUTER_USER=admin
+ROUTER_PASSWORD=your-password
+ROUTER_PORT=8728
+```
 
-## Code of Conduct
+## Project Structure
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```
+resources/
+├── css/
+│   ├── app.css                    # Main CSS entry
+│   └── components/                # Component styles
+│       ├── utilities.css          # Shared utility classes
+│       ├── header.css
+│       ├── traffic-monitor.css
+│       ├── system-utilization.css
+│       ├── network-info.css
+│       ├── stats.css
+│       ├── connected-clients.css
+│       ├── queue-monitor.css
+│       └── footer.css
+├── js/
+│   ├── app.js                     # Main JS entry
+│   ├── utils.js                   # Shared utilities
+│   └── components/                # Component scripts
+│       ├── router-status.js
+│       ├── traffic-monitor.js
+│       ├── system-utilization.js
+│       ├── network-info.js
+│       ├── top-connections.js
+│       ├── connected-clients.js
+│       └── queue-monitor.js
+└── views/
+    ├── layout.blade.php
+    ├── layouts/
+    │   ├── header.blade.php
+    │   └── footer.blade.php
+    ├── components/
+    │   ├── traffic-monitor.blade.php
+    │   ├── system-utilization.blade.php
+    │   ├── network-info.blade.php
+    │   ├── top-connections.blade.php
+    │   ├── connected-clients.blade.php
+    │   └── queue-monitor.blade.php
+    └── page/
+        └── dashboard.blade.php
+```
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The MikroPulse is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
