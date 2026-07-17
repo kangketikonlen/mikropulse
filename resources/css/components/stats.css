@@ -8,19 +8,23 @@
     }
 
     .top-list {
-        @apply bg-white rounded border border-gray-200 p-3;
+        @apply card p-3;
     }
 
     .top-list-header {
-        @apply flex items-center gap-2 mb-2;
+        @apply card-header;
     }
 
     .top-list-title {
-        @apply text-xs font-semibold text-gray-700 uppercase tracking-wide;
+        @apply card-title;
     }
 
     .top-list-items {
         @apply space-y-1.5;
+    }
+
+    .top-list-section-title {
+        @apply text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1 dark:text-gray-400;
     }
 
     .top-list-section {
@@ -28,14 +32,14 @@
     }
 
     .top-list-item {
-        @apply flex items-center justify-between text-xs py-1 border-b border-gray-100;
+        @apply flex items-center justify-between text-xs py-1 border-b border-gray-100 dark:border-dark-border;
     }
 
     .top-list-ip {
-        @apply font-mono text-gray-800;
+        @apply list-value;
     }
 
     .top-list-count {
-        @apply text-gray-500 font-medium;
+        @apply list-stat;
     }
 }

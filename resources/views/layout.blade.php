@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,7 +19,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="bg-gray-50 text-gray-800 font-sans antialiased">
+    <body class="bg-gray-50 text-gray-800 font-sans antialiased dark:bg-dark-bg dark:text-gray-100">
         <div class="min-h-screen flex flex-col">
             @include('layouts.header')
 
@@ -29,5 +29,16 @@
 
             @include('layouts.footer')
         </div>
+
+        <script>
+            (function() {
+                const html = document.documentElement;
+                const stored = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (stored === 'dark' || (!stored && prefersDark)) {
+                    html.classList.add('dark');
+                }
+            })();
+        </script>
     </body>
 </html>

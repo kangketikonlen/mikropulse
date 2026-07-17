@@ -28,3 +28,12 @@ SystemUtilization.init();
 NetworkInfo.init();
 ConnectedClients.init();
 QueueMonitor.init();
+
+const themeToggle = document.getElementById('theme-toggle');
+if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+        const html = document.documentElement;
+        const isDark = html.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+}

@@ -1,14 +1,14 @@
 @layer components {
     .queue-monitor {
-        @apply bg-white rounded-md border border-gray-200 p-2;
+        @apply card p-2;
     }
 
     .queue-monitor-header {
-        @apply flex items-center justify-between mb-2;
+        @apply card-header;
     }
 
     .queue-monitor-title {
-        @apply text-[11px] font-semibold text-gray-700 uppercase tracking-wide;
+        @apply card-title;
     }
 
     .queue-monitor-list {
@@ -16,26 +16,26 @@
     }
 
     .queue-item {
-        @apply text-xs rounded-md border border-gray-100;
+        @apply list-item;
     }
 
     .queue-item-odd {
-        @apply bg-green-50;
+        @apply list-item-odd;
     }
 
     .queue-item-even {
-        @apply bg-blue-50;
+        @apply list-item-even;
     }
 
     .queue-row {
-        @apply flex items-center justify-between py-0.5 px-1.5;
+        @apply list-row;
     }
 
     .queue-name {
-        @apply font-mono text-gray-800 font-medium;
+        @apply list-value;
     }
 
     .queue-stat {
-        @apply text-[10px] text-gray-500;
+        @apply list-stat;
     }
 }

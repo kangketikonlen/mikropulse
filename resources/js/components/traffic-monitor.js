@@ -1,4 +1,5 @@
 import Chart from 'chart.js/auto';
+import { isDark, subscribeToRouterUpdates } from '../utils.js';
 
 const TrafficMonitor = (() => {
     const MAX_POINTS = 50;
@@ -9,7 +10,14 @@ const TrafficMonitor = (() => {
     let txChart = null;
 
     function formatMbps(bitsPerSecond) {
-        return (bitsPerSecond / 1000000).toFixed(2);
+        const mbps = bitsPerSecond / 1000000;
+
+        if (mbps >= 0.01) {
+            return mbps.toFixed(2);
+        }
+
+        const kbps = bitsPerSecond / 1000;
+        return kbps.toFixed(0) + ' Kbps';
     }
 
     function getSpeedClass(mbps) {
@@ -23,6 +31,14 @@ const TrafficMonitor = (() => {
         const txCanvas = document.getElementById('tx-chart');
 
         if (!rxCanvas || !txCanvas) return;
+
+        const dark = isDark();
+
+        const rxLine = dark ? '#818cf8' : '#4f46e5';
+        const rxFill = dark ? 'rgba(129, 140, 248, 0.15)' : 'rgba(79, 70, 229, 0.15)';
+        const txLine = dark ? '#4ade80' : '#16a34a';
+        const txFill = dark ? 'rgba(74, 222, 128, 0.15)' : 'rgba(22, 163, 74, 0.15)';
+        const gridColor = 'rgba(0, 0, 0, 0)';
 
         const commonOptions = {
             responsive: true,
@@ -48,7 +64,7 @@ const TrafficMonitor = (() => {
                     beginAtZero: true,
                     suggestedMax: 10,
                     grid: {
-                        color: '#fff',
+                        color: gridColor,
                         drawTicks: false,
                     },
                     ticks: {
@@ -77,8 +93,8 @@ const TrafficMonitor = (() => {
                 labels: new Array(MAX_POINTS).fill(''),
                 datasets: [{
                     data: [...rxData],
-                    borderColor: '#4f46e5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                    borderColor: rxLine,
+                    backgroundColor: rxFill,
                     fill: true,
                 }]
             },
@@ -91,8 +107,8 @@ const TrafficMonitor = (() => {
                 labels: new Array(MAX_POINTS).fill(''),
                 datasets: [{
                     data: [...txData],
-                    borderColor: '#16a34a',
-                    backgroundColor: 'rgba(22, 163, 74, 0.2)',
+                    borderColor: txLine,
+                    backgroundColor: txFill,
                     fill: true,
                 }]
             },
@@ -168,12 +184,7 @@ const TrafficMonitor = (() => {
 
         initCharts();
 
-        if (window.Echo) {
-            Echo.channel('router-updates')
-                .listen('RouterDataUpdated', (e) => {
-                    handleTraffic(e.data?.traffic);
-                });
-        }
+        subscribeToRouterUpdates((e) => handleTraffic(e.data?.traffic));
     }
 
     return { init };

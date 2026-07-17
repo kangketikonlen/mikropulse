@@ -1,34 +1,33 @@
+import { isDark } from '../utils.js';
+
+import { subscribeToRouterUpdates } from '../utils.js';
+
 const RouterStatus = (() => {
     function init() {
-        const statusDot = document.getElementById('router-status-dot');
+        const statusIcon = document.getElementById('router-status-icon');
         const statusLabel = document.getElementById('router-status-label');
 
-        if (!statusDot || !statusLabel) return;
+        if (!statusIcon || !statusLabel) return;
 
         function updateStatus(data) {
-            statusDot.classList.remove('router-status-dot-checking');
+            statusIcon.classList.remove('text-green-500', 'text-red-500', 'text-yellow-500');
 
             const status = data?.status ?? data?.data?.status;
             const identity = data?.identity ?? data?.data?.identity;
 
             if (status === 'connected') {
-                statusDot.classList.add('router-status-dot-connected');
-                statusLabel.textContent = identity || 'Router Online';
+                statusIcon.classList.add('text-green-500');
+                statusLabel.textContent = "You're in " + (identity || 'Router Online');
             } else if (status === 'disconnected') {
-                statusDot.classList.add('router-status-dot-disconnected');
+                statusIcon.classList.add('text-red-500');
                 statusLabel.textContent = 'Router Offline';
             } else {
-                statusDot.classList.add('router-status-dot-disconnected');
+                statusIcon.classList.add('text-red-500');
                 statusLabel.textContent = 'Connection Error';
             }
         }
 
-        if (window.Echo) {
-            Echo.channel('router-updates')
-                .listen('RouterDataUpdated', (e) => {
-                    updateStatus(e.data?.status);
-                });
-        }
+        subscribeToRouterUpdates((e) => updateStatus(e.data?.status));
     }
 
     return { init };

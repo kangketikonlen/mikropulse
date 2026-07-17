@@ -1,9 +1,21 @@
 @import 'tailwindcss';
 @import '@fortawesome/fontawesome-free/css/all.min.css';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-dark-bg: #0d0d0d;
+    --color-dark-surface: #0a0406;
+    --color-dark-border: #150d10;
+    --color-dark-muted: #2d2225;
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+@import './components/utilities.css';
 @import './components/header.css';
 @import './components/traffic-monitor.css';
 @import './components/system-utilization.css';
@@ -12,8 +24,3 @@
 @import './components/connected-clients.css';
 @import './components/queue-monitor.css';
 @import './components/footer.css';
-
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
-}

@@ -1,3 +1,5 @@
+import { renderEmpty, subscribeToRouterUpdates } from '../utils.js';
+
 const NetworkInfo = (() => {
     function init() {
         const listContainer = document.getElementById('network-list');
@@ -6,7 +8,7 @@ const NetworkInfo = (() => {
 
         function renderList(networks) {
             if (!networks || networks.length === 0) {
-                listContainer.innerHTML = '<div class="network-info-item text-gray-400">No data</div>';
+                renderEmpty(listContainer, 'No data');
                 return;
             }
 
@@ -30,13 +32,10 @@ const NetworkInfo = (() => {
             }).join('');
         }
 
-        if (window.Echo) {
-            Echo.channel('router-updates')
-                .listen('RouterDataUpdated', (e) => {
-                    const networks = e.data?.networkInfo?.networks ?? e.networkInfo?.networks ?? [];
-                    renderList(networks);
-                });
-        }
+        subscribeToRouterUpdates((e) => {
+            const networks = e.data?.networkInfo?.networks ?? e.networkInfo?.networks ?? [];
+            renderList(networks);
+        });
     }
 
     return { init };

@@ -1,3 +1,5 @@
+import { isDark, subscribeToRouterUpdates } from '../utils.js';
+
 const SystemUtilization = (() => {
     function drawGauge(canvasId, value, maxValue, color) {
         const canvas = document.getElementById(canvasId);
@@ -20,6 +22,10 @@ const SystemUtilization = (() => {
 
         ctx.clearRect(0, 0, width, height);
 
+        const dark = isDark();
+        const trackColor = dark ? 'rgba(255, 255, 255, 0.1)' : '#e5e7eb';
+        const textColor = dark ? '#e5e7eb' : '#111827';
+
         const startAngle = Math.PI;
         const endAngle = 2 * Math.PI;
         const percent = Math.min(value / maxValue, 1);
@@ -27,7 +33,7 @@ const SystemUtilization = (() => {
 
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-        ctx.strokeStyle = '#e5e7eb';
+        ctx.strokeStyle = trackColor;
         ctx.lineWidth = lineWidth;
         ctx.lineCap = 'round';
         ctx.stroke();
@@ -41,7 +47,7 @@ const SystemUtilization = (() => {
             ctx.stroke();
         }
 
-        ctx.fillStyle = '#111827';
+        ctx.fillStyle = textColor;
         ctx.font = 'bold 10px ui-sans-serif, system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -55,6 +61,8 @@ const SystemUtilization = (() => {
 
         if (!uptimeEl || !boardNameEl || !versionEl) return;
 
+        const dark = isDark();
+
         function handleSystemData(data) {
             const system = data?.systemUtilization ?? data?.data?.systemUtilization ?? data;
             if (system?.status === 'connected') {
@@ -62,18 +70,13 @@ const SystemUtilization = (() => {
                 boardNameEl.textContent = system.board_name || 'Unknown Router';
                 versionEl.textContent = 'v' + (system.version || 'Unknown');
 
-                drawGauge('cpu-gauge', system.cpu || 0, 100, '#4f46e5');
-                drawGauge('ram-gauge', system.memory || 0, 100, '#16a34a');
-                drawGauge('storage-gauge', system.storage || 0, 100, '#d97706');
+                drawGauge('cpu-gauge', system.cpu || 0, 100, dark ? '#818cf8' : '#4f46e5');
+                drawGauge('ram-gauge', system.memory || 0, 100, dark ? '#4ade80' : '#16a34a');
+                drawGauge('storage-gauge', system.storage || 0, 100, dark ? '#fbbf24' : '#d97706');
             }
         }
 
-        if (window.Echo) {
-            Echo.channel('router-updates')
-                .listen('RouterDataUpdated', (e) => {
-                    handleSystemData(e);
-                });
-        }
+        subscribeToRouterUpdates((e) => handleSystemData(e));
     }
 
     return { init };

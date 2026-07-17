@@ -1,6 +1,9 @@
 <div class="system-utilization" id="system-utilization">
     <div class="system-utilization-header">
-        <span class="system-utilization-title">System Utilization</span>
+        <div class="flex items-center gap-1.5">
+            <i class="fa-solid fa-microchip text-gray-400 dark:text-gray-500"></i>
+            <span class="system-utilization-title">System Utilization</span>
+        </div>
         <span class="system-utilization-uptime" id="system-uptime">Loading...</span>
     </div>
     <div class="system-utilization-gauges">

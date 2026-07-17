@@ -1,3 +1,5 @@
+import { subscribeToRouterUpdates } from '../utils.js';
+
 const TopConnections = (() => {
     function init() {
         const sourcesList = document.getElementById('sources-list');
@@ -21,20 +23,17 @@ const TopConnections = (() => {
             `).join('');
         }
 
-        if (window.Echo) {
-            Echo.channel('router-updates')
-                .listen('RouterDataUpdated', (e) => {
-                    const topData = e.data?.topConnections ?? e.topConnections;
+        subscribeToRouterUpdates((e) => {
+            const topData = e.data?.topConnections ?? e.topConnections;
 
-                    if (topData && topData.status === 'connected') {
-                        renderList(sourcesList, topData.sources || [], topData.source_counts || {}, 'No data');
-                        renderList(destinationsList, topData.destinations || [], topData.destination_counts || {}, 'No data');
-                    } else {
-                        renderList(sourcesList, [], {}, 'Disconnected');
-                        renderList(destinationsList, [], {}, 'Disconnected');
-                    }
-                });
-        }
+            if (topData && topData.status === 'connected') {
+                renderList(sourcesList, topData.sources || [], topData.source_counts || {}, 'No data');
+                renderList(destinationsList, topData.destinations || [], topData.destination_counts || {}, 'No data');
+            } else {
+                renderList(sourcesList, [], {}, 'Disconnected');
+                renderList(destinationsList, [], {}, 'Disconnected');
+            }
+        });
     }
 
     return { init };

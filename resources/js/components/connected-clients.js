@@ -1,3 +1,5 @@
+import { renderEmpty, subscribeToRouterUpdates } from '../utils.js';
+
 const ConnectedClients = (() => {
     function formatBytes(bytes) {
         if (bytes === 0) return '0 B';
@@ -13,7 +15,7 @@ const ConnectedClients = (() => {
 
         function renderList(clients) {
             if (!clients || clients.length === 0) {
-                listContainer.innerHTML = '<div class="client-item text-gray-400">No connected clients</div>';
+                renderEmpty(listContainer, 'No connected clients');
                 return;
             }
 
@@ -37,17 +39,14 @@ const ConnectedClients = (() => {
             }).join('');
         }
 
-        if (window.Echo) {
-            Echo.channel('router-updates')
-                .listen('RouterDataUpdated', (e) => {
-                    const data = e.data?.connectedClients ?? e.connectedClients;
-                    if (data && data.status === 'connected') {
-                        renderList(data.clients || []);
-                    } else {
-                        renderList([]);
-                    }
-                });
-        }
+        subscribeToRouterUpdates((e) => {
+            const data = e.data?.connectedClients ?? e.connectedClients;
+            if (data && data.status === 'connected') {
+                renderList(data.clients || []);
+            } else {
+                renderList([]);
+            }
+        });
     }
 
     return { init };

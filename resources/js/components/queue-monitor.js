@@ -1,3 +1,5 @@
+import { renderEmpty, subscribeToRouterUpdates } from '../utils.js';
+
 const QueueMonitor = (() => {
     function formatRate(bitsPerSecond) {
         if (bitsPerSecond <= 0) return '0 Mbps';
@@ -37,24 +39,21 @@ const QueueMonitor = (() => {
 
         function renderList(queues) {
             if (!queues || queues.length === 0) {
-                listContainer.innerHTML = '<div class="queue-item text-gray-400">No queues configured</div>';
+                renderEmpty(listContainer, 'No queues configured');
                 return;
             }
 
             listContainer.innerHTML = queues.map((queue, index) => renderQueueItem(queue, 0)).join('');
         }
 
-        if (window.Echo) {
-            Echo.channel('router-updates')
-                .listen('RouterDataUpdated', (e) => {
-                    const data = e.data?.queueMonitoring ?? e.queueMonitoring;
-                    if (data && data.status === 'connected') {
-                        renderList(data.queues || []);
-                    } else {
-                        renderList([]);
-                    }
-                });
-        }
+        subscribeToRouterUpdates((e) => {
+            const data = e.data?.queueMonitoring ?? e.queueMonitoring;
+            if (data && data.status === 'connected') {
+                renderList(data.queues || []);
+            } else {
+                renderList([]);
+            }
+        });
     }
 
     return { init };
