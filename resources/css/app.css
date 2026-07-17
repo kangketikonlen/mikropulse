@@ -5,15 +5,12 @@
 @source '../../storage/framework/views/*.php';
 
 @import './components/header.css';
-@import './components/hero.css';
 @import './components/traffic-monitor.css';
 @import './components/system-utilization.css';
 @import './components/network-info.css';
-@import './components/buttons.css';
 @import './components/stats.css';
 @import './components/connected-clients.css';
 @import './components/queue-monitor.css';
-@import './components/features.css';
 @import './components/footer.css';
 
 @theme {

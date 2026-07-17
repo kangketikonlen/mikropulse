@@ -31,10 +31,6 @@
         @apply text-[10px] font-medium text-gray-600 mt-1;
     }
 
-    .gauge-value {
-        @apply text-[10px] font-bold text-gray-900;
-    }
-
     .system-utilization-footer {
         @apply flex items-center justify-between pt-2 border-t border-gray-100;
     }

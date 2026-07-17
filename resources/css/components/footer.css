@@ -4,30 +4,10 @@
     }
 
     .footer-container {
-        @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
-    }
-
-    .footer-inner {
-        @apply flex flex-col md:flex-row justify-between items-center gap-4;
-    }
-
-    .footer-brand {
-        @apply flex items-center gap-3;
-    }
-
-    .footer-logo {
-        @apply w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center;
-    }
-
-    .footer-logo svg {
-        @apply w-5 h-5 text-white;
-    }
-
-    .footer-title {
-        @apply text-lg font-bold;
+        @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 text-center;
     }
 
     .footer-text {
-        @apply text-gray-400 text-sm;
+        @apply text-gray-400 text-xs;
     }
 }

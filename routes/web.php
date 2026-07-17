@@ -4,7 +4,7 @@ use App\Http\Controllers\RouterController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('dashboard');
+    return view('page.dashboard');
 });
 
 Route::prefix('router')->name('router.')->group(function () {

@@ -1,10 +1,6 @@
 @layer components {
-    .traffic-monitor {
-        @apply bg-white border-b border-gray-200;
-    }
-
     .traffic-monitor-container {
-        @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3;
+        @apply w-full;
     }
 
     .traffic-monitor-header {
@@ -36,11 +32,11 @@
     }
 
     .traffic-monitor-grid {
-        @apply grid grid-cols-1 lg:grid-cols-2 gap-2;
+        @apply grid grid-cols-2 gap-2;
     }
 
     .traffic-monitor-card {
-        @apply bg-white rounded border border-gray-200 p-2;
+        @apply w-full bg-white rounded border border-gray-200 p-2;
     }
 
     .traffic-monitor-card-header {
@@ -72,7 +68,7 @@
     }
 
     .traffic-monitor-canvas-wrap {
-        @apply h-16 overflow-hidden relative transition-opacity duration-300;
+        @apply w-full h-16 overflow-hidden relative transition-opacity duration-300;
     }
 
     .traffic-monitor-canvas {

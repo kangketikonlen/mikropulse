@@ -24,19 +24,10 @@ const TrafficMonitor = (() => {
 
         if (!rxCanvas || !txCanvas) return;
 
-        const wrapper = rxCanvas.parentElement;
-        const rect = wrapper.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-
-        rxCanvas.width = rect.width * dpr;
-        rxCanvas.height = rect.height * dpr;
-        txCanvas.width = rect.width * dpr;
-        txCanvas.height = rect.height * dpr;
-
         const commonOptions = {
-            animation: false,
-            responsive: false,
+            responsive: true,
             maintainAspectRatio: false,
+            animation: false,
             layout: {
                 padding: 0,
             },
