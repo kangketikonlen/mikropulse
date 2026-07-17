@@ -1,42 +1,47 @@
 version: 2
+
 updates:
-  - package-ecosystem: "composer"
+  - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "stable"
     schedule:
       interval: "monthly"
     groups:
-      composer-patch:
+      github-actions:
         patterns:
           - "*"
-        update-types:
-          - "patch"
-      composer-minor:
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    target-branch: "stable"
+    schedule:
+      interval: "monthly"
+    groups:
+      npm-minor-patch:
         patterns:
           - "*"
         update-types:
           - "minor"
-      composer-major:
+          - "patch"
+      npm-major:
         patterns:
           - "*"
         update-types:
           - "major"
 
-  - package-ecosystem: "npm"
+  - package-ecosystem: "composer"
     directory: "/"
+    target-branch: "stable"
     schedule:
       interval: "monthly"
     groups:
-      npm-patch:
-        patterns:
-          - "*"
-        update-types:
-          - "patch"
-      npm-minor:
+      composer-minor-patch:
         patterns:
           - "*"
         update-types:
           - "minor"
-      npm-major:
+          - "patch"
+      composer-major:
         patterns:
           - "*"
         update-types:

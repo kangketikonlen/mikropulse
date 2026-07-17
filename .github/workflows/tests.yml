@@ -1,47 +1,129 @@
-name: Tests
+name: Test Workflow
 
 on:
   push:
-    branches: [stable, devs]
+    # branches-ignore:
+    #   - stable
   pull_request:
-    branches: [stable, devs]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: test-workflow-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: testing
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    name: Run Tests
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
-          extensions: mbstring, bcmath, pdo, pdo_mysql
-          coverage: xdebug
+          php-version: '8.4'
+          extensions: mbstring, intl, bcmath, xml, pdo_sqlite, pcntl
+          coverage: none
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Copy .env
+        run: cp .env.example .env
 
-      - name: Setup environment
+      - name: Configure Environment
         run: |
-          cp .env.example .env
-          php artisan key:generate --force
-          php artisan config:clear
+          echo "APP_ENV=testing" >> .env
+          echo "DB_CONNECTION=sqlite" >> .env
+          echo "DB_DATABASE=database/database.sqlite" >> .env
 
-      - name: Run migrations
-        run: php artisan migrate --force --database=mysql
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
-      - name: Run tests
-        run: php artisan test
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Cache Laravel Bootstrap
+        uses: actions/cache@v6
+        with:
+          path: bootstrap/cache
+          key: laravel-bootstrap-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: laravel-bootstrap-${{ runner.os }}-
+
+      - name: Generate Application Key
+        run: php artisan key:generate
+
+      - name: Create Database
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+
+      - name: Run Migrations
+        run: php artisan migrate --force
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Install npm dependencies and Build
+        run: |
+          npm install --ignore-scripts
+          npm run build
+
+      - name: Run Tests
+        run: php artisan test --parallel --processes=4
+
+  create-pr:
+    name: Create Pull Request
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CURRENT_BRANCH: ${{ github.ref_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Create pull request to stable
+        run: |
+          existing_pr=$(gh pr list \
+            --state open \
+            --base stable \
+            --head "${CURRENT_BRANCH}" \
+            --json number \
+            --jq '.[0].number')
+
+          if [ -n "${existing_pr}" ]; then
+            echo "Pull request ${existing_pr} already exists for ${CURRENT_BRANCH}."
+            exit 0
+          fi
+
+          if git diff --quiet "origin/stable...origin/${CURRENT_BRANCH}"; then
+            echo "No differences between ${CURRENT_BRANCH} and stable."
+            exit 0
+          fi
+
+          current_date=$(TZ='Asia/Jakarta' date +'%d-%m-%Y %H:%M')
+          pr_title="[${current_date}] ${CURRENT_BRANCH} - Request merge ${CURRENT_BRANCH} to stable branch"
+
+          gh pr create \
+            --base stable \
+            --head "${CURRENT_BRANCH}" \
+            --title "${pr_title}" \
+            --body "Automated pull request from ${CURRENT_BRANCH} to stable branch"
