@@ -30,7 +30,7 @@ class BroadcastRouterUpdates extends Command
                 $this->error('['.now()->format('H:i:s').'] '.$e->getMessage());
             }
 
-            usleep(1000000); // Sleep for 1 second before the next broadcast
+            usleep(2000000); // Sleep for 2 seconds before the next broadcast
         }
     }
 }

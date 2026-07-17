@@ -10,13 +10,17 @@ class RouterService
     private static int $lastKeepalive = 0;
     private static int $keepaliveInterval = 30;
 
+    private static ?array $cachedIdentity = null;
+    private static int $cachedIdentityTime = 0;
+    private static int $identityTtl = 60;
+
     private static ?array $cachedSystemData = null;
     private static int $cachedSystemDataTime = 0;
     private static int $systemDataTtl = 5;
 
     private static ?array $cachedConnectionsData = null;
     private static int $cachedConnectionsDataTime = 0;
-    private static int $connectionsDataTtl = 5;
+    private static int $connectionsDataTtl = 10;
 
     private static ?array $cachedNetworkData = null;
     private static int $cachedNetworkDataTime = 0;
@@ -24,11 +28,11 @@ class RouterService
 
     private static ?array $cachedClientsData = null;
     private static int $cachedClientsDataTime = 0;
-    private static int $clientsDataTtl = 5;
+    private static int $clientsDataTtl = 10;
 
     private static ?array $cachedQueueData = null;
     private static int $cachedQueueDataTime = 0;
-    private static int $queueDataTtl = 5;
+    private static int $queueDataTtl = 10;
 
     private function getClient(): \Mivo\MikrotikRos6\Client
     {
@@ -89,12 +93,21 @@ class RouterService
                 return $this->disconnectedResponse();
             }
 
-            $identity = $client->comm('/system/identity/print');
-            $identityName = $identity[0]['name'] ?? 'Unknown';
+            $now = time();
+
+            if (self::$cachedIdentity === null || ($now - self::$cachedIdentityTime) >= self::$identityTtl) {
+                $identity = $client->comm('/system/identity/print', [
+                    '.proplist' => 'name',
+                ]);
+                self::$cachedIdentity = ['name' => $identity[0]['name'] ?? 'Unknown'];
+                self::$cachedIdentityTime = $now;
+            }
+            $identityName = self::$cachedIdentity['name'];
 
             $traffic = $client->comm('/interface/monitor-traffic', [
                 'interface' => 'ether1',
                 'once' => '',
+                '.proplist' => 'rx-bits-per-second,tx-bits-per-second',
             ]);
             $trafficData = [];
             if (! empty($traffic)) {
@@ -110,8 +123,6 @@ class RouterService
                     'message' => 'No traffic data available for ether1',
                 ];
             }
-
-            $now = time();
 
             if (self::$cachedSystemData === null || ($now - self::$cachedSystemDataTime) >= self::$systemDataTtl) {
                 self::$cachedSystemData = $this->getSystemUtilization($client);
@@ -145,9 +156,9 @@ class RouterService
                     'message' => 'Router is online',
                 ],
                 'traffic' => $trafficData,
-                'topConnections' => $this->getTopConnections($client),
-                'systemUtilization' => $this->getSystemUtilization($client),
-                'networkInfo' => $this->getNetworkInfo($client),
+                'topConnections' => self::$cachedConnectionsData,
+                'systemUtilization' => self::$cachedSystemData,
+                'networkInfo' => self::$cachedNetworkData,
                 'connectedClients' => self::$cachedClientsData,
                 'queueMonitoring' => self::$cachedQueueData,
             ];
@@ -242,7 +253,9 @@ class RouterService
                 }
             }
 
-            $connections = $client->comm('/ip/firewall/connection/print');
+            $connections = $client->comm('/ip/firewall/connection/print', [
+                '.proplist' => 'src-address,dst-address',
+            ]);
 
             if (empty($connections)) {
                 return [
@@ -303,7 +316,9 @@ class RouterService
                 }
             }
 
-            $resources = $client->comm('/system/resource/print');
+            $resources = $client->comm('/system/resource/print', [
+                '.proplist' => 'cpu-load,total-memory,free-memory,total-hdd-space,free-hdd-space,uptime,board-name,version',
+            ]);
 
             if (empty($resources)) {
                 return [
@@ -420,8 +435,12 @@ class RouterService
                 }
             }
 
-            $connections = $client->comm('/ip/firewall/connection/print');
-            $leases = $client->comm('/ip/dhcp-server/lease/print');
+            $connections = $client->comm('/ip/firewall/connection/print', [
+                '.proplist' => 'src-address,orig-bytes,repl-bytes',
+            ]);
+            $leases = $client->comm('/ip/dhcp-server/lease/print', [
+                '.proplist' => 'address,host-name',
+            ]);
             $dnsEntries = $client->comm('/ip/dns/static/print');
 
             $hostnameMap = [];
