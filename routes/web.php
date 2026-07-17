@@ -14,5 +14,6 @@ Route::prefix('router')->name('router.')->group(function () {
     Route::get('/system', [RouterController::class, 'systemUtilization'])->name('system');
     Route::get('/network', [RouterController::class, 'networkInfo'])->name('network');
     Route::get('/clients', [RouterController::class, 'connectedClients'])->name('clients');
+    Route::get('/queue', [RouterController::class, 'queueMonitoring'])->name('queue');
     Route::get('/broadcast', [RouterController::class, 'broadcastUpdate'])->name('broadcast');
 });

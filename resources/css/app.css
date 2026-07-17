@@ -12,6 +12,7 @@
 @import './components/buttons.css';
 @import './components/stats.css';
 @import './components/connected-clients.css';
+@import './components/queue-monitor.css';
 @import './components/features.css';
 @import './components/footer.css';
 

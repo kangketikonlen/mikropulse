@@ -7,6 +7,7 @@ import TopConnections from './top-connections.js';
 import SystemUtilization from './system-utilization.js';
 import NetworkInfo from './network-info.js';
 import ConnectedClients from './connected-clients.js';
+import QueueMonitor from './queue-monitor.js';
 
 window.Pusher = Pusher;
 
@@ -26,3 +27,4 @@ TopConnections.init();
 SystemUtilization.init();
 NetworkInfo.init();
 ConnectedClients.init();
+QueueMonitor.init();

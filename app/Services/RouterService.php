@@ -26,6 +26,10 @@ class RouterService
     private static int $cachedClientsDataTime = 0;
     private static int $clientsDataTtl = 5;
 
+    private static ?array $cachedQueueData = null;
+    private static int $cachedQueueDataTime = 0;
+    private static int $queueDataTtl = 5;
+
     private function getClient(): \Mivo\MikrotikRos6\Client
     {
         if (self::$client === null) {
@@ -129,6 +133,11 @@ class RouterService
                 self::$cachedClientsDataTime = $now;
             }
 
+            if (self::$cachedQueueData === null || ($now - self::$cachedQueueDataTime) >= self::$queueDataTtl) {
+                self::$cachedQueueData = $this->getQueueMonitoring($client);
+                self::$cachedQueueDataTime = $now;
+            }
+
             return [
                 'status' => [
                     'status' => 'connected',
@@ -140,6 +149,7 @@ class RouterService
                 'systemUtilization' => $this->getSystemUtilization($client),
                 'networkInfo' => $this->getNetworkInfo($client),
                 'connectedClients' => self::$cachedClientsData,
+                'queueMonitoring' => self::$cachedQueueData,
             ];
         } catch (\Throwable $e) {
             \Log::error('RouterService error', ['message' => $e->getMessage()]);
@@ -439,34 +449,112 @@ class RouterService
             if (! empty($connections)) {
                 foreach ($connections as $conn) {
                     $src = $conn['src-address'] ?? null;
-                    if ($src) {
-                        $ip = explode(':', $src)[0];
-                        if (! isset($ipStats[$ip])) {
-                            $ipStats[$ip] = [
-                                'ip' => $ip,
-                                'hostname' => $hostnameMap[$ip] ?? null,
-                                'connections' => 0,
-                            ];
-                        }
-                        $ipStats[$ip]['connections']++;
+                    if (! $src) {
+                        continue;
                     }
+
+                    $ip = explode(':', $src)[0];
+
+                    if (! isset($ipStats[$ip])) {
+                        $ipStats[$ip] = [
+                            'ip' => $ip,
+                            'hostname' => $hostnameMap[$ip] ?? null,
+                            'connections' => 0,
+                            'upload_bytes' => 0,
+                            'download_bytes' => 0,
+                        ];
+                    }
+
+                    $ipStats[$ip]['connections']++;
+                    $ipStats[$ip]['upload_bytes'] += (int) ($conn['orig-bytes'] ?? 0);
+                    $ipStats[$ip]['download_bytes'] += (int) ($conn['repl-bytes'] ?? 0);
                 }
             }
 
-            uasort($ipStats, fn($a, $b) => $b['connections'] <=> $a['connections']);
+            uasort($ipStats, fn($a, $b) => ($b['download_bytes'] + $b['upload_bytes']) <=> ($a['download_bytes'] + $a['upload_bytes']));
+
+            $topByBandwidth = array_slice($ipStats, 0, 9, true);
+
+            uasort($topByBandwidth, fn($a, $b) => ip2long($a['ip']) <=> ip2long($b['ip']));
 
             $clients = [];
-            foreach ($ipStats as $stat) {
+            foreach ($topByBandwidth as $stat) {
                 $clients[] = [
                     'ip' => $stat['ip'],
                     'hostname' => $stat['hostname'] ?: 'Unknown',
                     'connections' => $stat['connections'],
+                    'upload_bytes' => $stat['upload_bytes'],
+                    'download_bytes' => $stat['download_bytes'],
                 ];
             }
 
             return [
                 'status' => 'connected',
                 'clients' => $clients,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    public function getQueueMonitoring($client = null): array
+    {
+        try {
+            if ($client === null) {
+                $client = $this->getClient();
+                $connected = $client->isConnected();
+
+                if (! $connected) {
+                    return [
+                        'status' => 'disconnected',
+                        'message' => 'Router is not connected',
+                    ];
+                }
+            }
+
+            $queues = $client->comm('/queue/simple/print', [
+                '.proplist' => 'name,parent,rate',
+            ]);
+
+            if (empty($queues)) {
+                return [
+                    'status' => 'connected',
+                    'queues' => [],
+                ];
+            }
+
+            $queueList = [];
+            foreach ($queues as $queue) {
+                $name = $queue['name'] ?? 'Unnamed';
+                $parent = $queue['parent'] ?? '';
+                $rate = $queue['rate'] ?? '';
+                $upload = 0;
+                $download = 0;
+
+                if ($rate && str_contains($rate, '/')) {
+                    $parts = explode('/', $rate, 2);
+                    $upload = $this->parseRate($parts[0]);
+                    $download = $this->parseRate($parts[1]);
+                } elseif ($rate) {
+                    $download = $this->parseRate($rate);
+                }
+
+                $queueList[] = [
+                    'name' => $name,
+                    'parent' => $parent,
+                    'upload' => $upload,
+                    'download' => $download,
+                ];
+            }
+
+            $tree = $this->buildQueueTree($queueList);
+
+            return [
+                'status' => 'connected',
+                'queues' => $tree,
             ];
         } catch (\Exception $e) {
             return [
@@ -503,6 +591,10 @@ class RouterService
                 'status' => 'disconnected',
                 'message' => 'Router is not connected',
             ],
+            'queueMonitoring' => [
+                'status' => 'disconnected',
+                'message' => 'Router is not connected',
+            ],
         ];
     }
 
@@ -533,7 +625,31 @@ class RouterService
                 'status' => 'error',
                 'message' => $message,
             ],
+            'queueMonitoring' => [
+                'status' => 'error',
+                'message' => $message,
+            ],
         ];
+    }
+
+    private function buildQueueTree(array $queues): array
+    {
+        $lookup = [];
+        foreach ($queues as $queue) {
+            $lookup[$queue['name']] = $queue;
+        }
+
+        $tree = [];
+        foreach ($queues as $queue) {
+            $parent = $queue['parent'];
+            if ($parent && isset($lookup[$parent])) {
+                $lookup[$parent]['children'][] = &$lookup[$queue['name']];
+            } else {
+                $tree[] = &$lookup[$queue['name']];
+            }
+        }
+
+        return $tree;
     }
 
     private function formatUptime(string $uptime): string
@@ -562,5 +678,30 @@ class RouterService
         }
 
         return implode(' ', $parts) ?: '0M';
+    }
+
+    private function parseRate(string $rate): int
+    {
+        $rate = trim($rate);
+
+        if ($rate === '' || $rate === '0') {
+            return 0;
+        }
+
+        $multiplier = 1;
+        $value = $rate;
+
+        if (str_ends_with($rate, 'G')) {
+            $multiplier = 1000000000;
+            $value = rtrim($rate, 'G');
+        } elseif (str_ends_with($rate, 'M')) {
+            $multiplier = 1000000;
+            $value = rtrim($rate, 'M');
+        } elseif (str_ends_with($rate, 'k')) {
+            $multiplier = 1000;
+            $value = rtrim($rate, 'k');
+        }
+
+        return (int) ((float) $value * $multiplier);
     }
 }

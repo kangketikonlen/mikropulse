@@ -1,4 +1,12 @@
 const ConnectedClients = (() => {
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
     function init() {
         const listContainer = document.getElementById('clients-list');
         if (!listContainer) return;
@@ -19,6 +27,10 @@ const ConnectedClients = (() => {
                         </div>
                         <div class="client-row">
                             <span class="client-stat">${client.connections} conn</span>
+                        </div>
+                        <div class="client-row">
+                            <span class="client-stat">DL: ${formatBytes(client.download_bytes || 0)}</span>
+                            <span class="client-stat">UL: ${formatBytes(client.upload_bytes || 0)}</span>
                         </div>
                     </div>
                 `;

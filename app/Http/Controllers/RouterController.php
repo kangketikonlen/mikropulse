@@ -50,6 +50,13 @@ class RouterController extends Controller
         return response()->json($data, 200);
     }
 
+    public function queueMonitoring(RouterService $service): JsonResponse
+    {
+        $data = $service->getQueueMonitoring();
+
+        return response()->json($data, 200);
+    }
+
     public function broadcastUpdate(RouterService $service): JsonResponse
     {
         try {

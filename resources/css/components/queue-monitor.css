@@ -1,45 +1,41 @@
 @layer components {
-    .connected-clients {
+    .queue-monitor {
         @apply bg-white rounded-md border border-gray-200 p-2;
     }
 
-    .connected-clients-header {
+    .queue-monitor-header {
         @apply flex items-center justify-between mb-2;
     }
 
-    .connected-clients-title {
+    .queue-monitor-title {
         @apply text-[11px] font-semibold text-gray-700 uppercase tracking-wide;
     }
 
-    .connected-clients-list {
-        @apply grid grid-cols-3 gap-x-4 gap-y-1.5;
+    .queue-monitor-list {
+        @apply space-y-1.5 rounded-md overflow-hidden;
     }
 
-    .client-item {
+    .queue-item {
         @apply text-xs rounded-md border border-gray-100;
     }
 
-    .client-item-odd {
+    .queue-item-odd {
         @apply bg-green-50;
     }
 
-    .client-item-even {
+    .queue-item-even {
         @apply bg-blue-50;
     }
 
-    .client-row {
+    .queue-row {
         @apply flex items-center justify-between py-0.5 px-1.5;
     }
 
-    .client-ip {
+    .queue-name {
         @apply font-mono text-gray-800 font-medium;
     }
 
-    .client-hostname {
-        @apply text-gray-500 truncate ml-2;
-    }
-
-    .client-stat {
+    .queue-stat {
         @apply text-[10px] text-gray-500;
     }
 }
